@@ -1,59 +1,774 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Advanced Expense Tracker</title>
+  <meta name="description" content="ExpenseTracker Pro - Modern financial dashboard for trip expenses, participant split, and analytics." />
+  <title>ExpenseTracker Pro — Personal & Group Expense Management</title>
+  
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Main Stylesheet -->
   <link rel="stylesheet" href="assets/styles.css" />
+
+  <!-- Chart.js CDN for Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>💸 Advanced Expense Tracker</h1>
+  <!-- App Layout Container -->
+  <div class="app-layout">
+    
+    <!-- Mobile Backdrop -->
+    <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
 
-    <!-- Trip Section -->
-    <div id="trip-section">
-      <h2>📌 Trip/Event Info</h2>
-      <input type="text" id="tripTitle" placeholder="Trip Title (e.g. Goa Trip)" required />
-      <input type="date" id="tripDate" required />
-      <button id="startTrip">➕ Start Trip</button>
-      <button id="newTrip">🆕 New Trip</button>
-      <button id="viewHistory">🕘 View History</button>
-    </div>
+    <!-- Sidebar Navigation -->
+    <aside id="app-sidebar" class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="5" width="20" height="14" rx="2" />
+              <line x1="2" y1="10" x2="22" y2="10" />
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">ExpenseTracker</span>
+            <span class="brand-badge">PRO</span>
+          </div>
+        </div>
+      </div>
 
-    <form id="expense-form">
-      <input type="text" id="category" placeholder="Category" required />
-      <input type="text" id="description" placeholder="Description" required />
-      <input type="number" id="amount" placeholder="Amount (₹)" required />
-      <input type="text" id="paidBy" placeholder="Paid by (name)" required />
-      <button type="submit">Add Expense</button>
-    </form>
+      <nav class="sidebar-nav" aria-label="Main Navigation">
+        <ul class="nav-list">
+          <li class="nav-item">
+            <a href="#overview" class="nav-link active" data-view="overview">
+              <span class="nav-icon">📊</span>
+              <span class="nav-label">Overview</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#current-trip" class="nav-link" data-view="current-trip">
+              <span class="nav-icon">✈️</span>
+              <span class="nav-label">Current Trip</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#all-expenses" class="nav-link" data-view="all-expenses">
+              <span class="nav-icon">💳</span>
+              <span class="nav-label">All Expenses</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#trip-history" class="nav-link" data-view="trip-history">
+              <span class="nav-icon">📜</span>
+              <span class="nav-label">Trip History</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#analytics" class="nav-link" data-view="analytics">
+              <span class="nav-icon">📈</span>
+              <span class="nav-label">Analytics</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#settlement" class="nav-link" data-view="settlement">
+              <span class="nav-icon">⚖️</span>
+              <span class="nav-label">Settlement</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#settings" class="nav-link" data-view="settings">
+              <span class="nav-icon">⚙️</span>
+              <span class="nav-label">Settings</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
 
-    <div id="status" class="status"></div>
+      <div class="sidebar-footer">
+        <button type="button" class="theme-toggle-btn" aria-label="Toggle light and dark mode">
+          <span class="theme-icon">🌓</span>
+          <span class="theme-label">Dark Mode</span>
+        </button>
+        <div class="storage-indicator">
+          <span class="status-dot"></span>
+          <span class="storage-text">Offline LocalStorage Active</span>
+        </div>
+      </div>
+    </aside>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Trip Title</th>
-          <th>Date</th>
-          <th>Category</th>
-          <th>Description</th>
-          <th>Amount (₹)</th>
-          <th>Paid By</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="expense-table-body"></tbody>
-    </table>
+    <!-- Main Content Area -->
+    <div class="main-wrapper">
+      
+      <!-- Top App Header -->
+      <header class="app-header">
+        <div class="header-left">
+          <button type="button" id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Open Navigation Menu">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          
+          <div class="trip-badge-info">
+            <div class="trip-header-title-row">
+              <h1 id="header-trip-title" class="header-title">Goa Vacation</h1>
+              <span id="header-trip-badge" class="badge badge-success">Active Trip</span>
+            </div>
+            <div class="header-subtitle-row">
+              <span id="header-trip-date" class="header-subtitle">Started: 19 Oct 2026</span>
+              <span class="meta-sep">•</span>
+              <label for="header-trip-select" class="sr-only">Switch Trip</label>
+              <select id="header-trip-select" class="header-trip-dropdown" title="Quick switch trip"></select>
+            </div>
+          </div>
+        </div>
 
-    <div id="balances" class="balances"></div>
+        <div class="header-right">
+          <button type="button" class="theme-toggle-btn header-theme-btn" aria-label="Toggle theme" title="Toggle theme">
+            <span class="theme-icon">🌓</span>
+          </button>
+          <button type="button" id="header-new-trip-btn" class="btn btn-secondary">
+            <span class="btn-icon">🆕</span>
+            <span class="btn-text">New Trip</span>
+          </button>
+          <button type="button" id="header-add-expense-btn" class="btn btn-primary">
+            <span class="btn-icon">➕</span>
+            <span class="btn-text">Add Expense</span>
+          </button>
+        </div>
+      </header>
 
-    <!-- Trip History Section -->
-    <div id="history-section" class="hidden">
-      <h2>📜 Trip History</h2>
-      <ul id="trip-history-list"></ul>
+      <!-- Main Scrollable Body -->
+      <main class="content-container">
+
+        <!-- Global Status / Legacy Container -->
+        <div id="status" class="status-message-bar"></div>
+
+        <!-- 1. VIEW: Overview -->
+        <section id="view-overview" class="view-panel">
+          <!-- Summary Cards Grid -->
+          <div class="summary-cards-grid">
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Total Spending</span>
+                <span class="summary-icon icon-emerald">₹</span>
+              </div>
+              <div class="summary-card-value" id="stat-total-amount">₹0.00</div>
+              <div class="summary-card-sub">Recorded in active trip</div>
+            </div>
+
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Transactions</span>
+                <span class="summary-icon icon-blue">📋</span>
+              </div>
+              <div class="summary-card-value" id="stat-total-count">0</div>
+              <div class="summary-card-sub">Total expense entries</div>
+            </div>
+
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Avg per Expense</span>
+                <span class="summary-icon icon-amber">📊</span>
+              </div>
+              <div class="summary-card-value" id="stat-avg-amount">₹0.00</div>
+              <div class="summary-card-sub">Average per transaction</div>
+            </div>
+
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Participants</span>
+                <span class="summary-icon icon-purple">👥</span>
+              </div>
+              <div class="summary-card-value" id="stat-participants-count">0</div>
+              <div class="summary-card-sub">Equal share splitting</div>
+            </div>
+
+            <div class="summary-card summary-card-wide">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Highest Single Expense</span>
+                <span class="summary-icon icon-rose">💎</span>
+              </div>
+              <div class="summary-card-value text-rose" id="stat-highest-expense">₹0.00</div>
+              <div class="summary-card-sub">Top recorded expense item</div>
+            </div>
+          </div>
+
+          <!-- Quick Charts Section -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <h2 class="chart-card-title">Expense Distribution by Category</h2>
+              </div>
+              <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+                <div id="categoryChartEmpty" class="chart-empty-state">
+                  <div class="empty-icon">📊</div>
+                  <p>No category expenses to display</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <h2 class="chart-card-title">Daily Spending Timeline</h2>
+              </div>
+              <div class="chart-container">
+                <canvas id="timelineChart"></canvas>
+                <div id="timelineChartEmpty" class="chart-empty-state">
+                  <div class="empty-icon">📈</div>
+                  <p>No timeline data available</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Transactions Section -->
+          <div class="dashboard-section-card">
+            <div class="section-card-header">
+              <div>
+                <h2 class="section-title">Trip Transactions</h2>
+                <p class="section-desc">Recent expenses recorded for this trip</p>
+              </div>
+              <div class="filter-controls-bar">
+                <input type="text" id="filter-search" class="form-input input-search" placeholder="Search expenses..." aria-label="Search expenses" />
+                <select id="filter-category" class="form-select" aria-label="Filter by category"></select>
+                <select id="filter-period" class="form-select" aria-label="Filter by period">
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                  <option value="year">This Year</option>
+                </select>
+                <select id="filter-payer" class="form-select" aria-label="Filter by payer">
+                  <option value="all">All Payers</option>
+                </select>
+                <select id="filter-sort" class="form-select" aria-label="Sort expenses">
+                  <option value="date-desc">Newest First</option>
+                  <option value="date-asc">Oldest First</option>
+                  <option value="amount-desc">Amount: High to Low</option>
+                  <option value="amount-asc">Amount: Low to High</option>
+                  <option value="category-asc">Category: A to Z</option>
+                  <option value="description-asc">Description: A to Z</option>
+                </select>
+                <button type="button" id="filter-clear-btn" class="btn btn-ghost btn-sm" title="Clear all filters">Reset</button>
+              </div>
+            </div>
+
+            <!-- Transactions Table -->
+            <div id="expense-table-container" class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Paid By</th>
+                    <th class="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="expense-table-body"></tbody>
+              </table>
+
+              <!-- Empty State -->
+              <div id="table-empty-state" class="empty-state hidden">
+                <div class="empty-icon">🧾</div>
+                <h3>No Expenses Found</h3>
+                <p>No transactions match your current trip or filter criteria.</p>
+              </div>
+            </div>
+
+            <!-- Pagination Bar -->
+            <div id="pagination-container" class="pagination-bar"></div>
+          </div>
+
+          <!-- Balances & Settlement in Overview -->
+          <div class="dashboard-section-card">
+            <div class="section-card-header">
+              <div>
+                <h2 class="section-title">Participant Balances & Settlement</h2>
+                <p class="section-desc">Calculated equal share balances and direct settlement transfers</p>
+              </div>
+            </div>
+            <div id="balances" class="balances-container"></div>
+          </div>
+        </section>
+
+        <!-- 2. VIEW: Current Trip (Dedicated View) -->
+        <section id="view-current-trip" class="view-panel hidden">
+          <div class="view-header">
+            <div>
+              <h2 class="view-title">Current Trip Management</h2>
+              <p class="view-desc">Detailed transactions and split breakdown for the active trip</p>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('header-add-expense-btn').click()">
+              <span>➕ Add Expense</span>
+            </button>
+          </div>
+
+          <!-- Current Trip Summary Cards -->
+          <div class="summary-cards-grid">
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Trip Total</span>
+                <span class="summary-icon icon-emerald">₹</span>
+              </div>
+              <div class="summary-card-value" id="ct-stat-total-amount">₹0.00</div>
+              <div class="summary-card-sub">Current trip spend</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Transactions</span>
+                <span class="summary-icon icon-blue">📋</span>
+              </div>
+              <div class="summary-card-value" id="ct-stat-total-count">0</div>
+              <div class="summary-card-sub">Items recorded</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Avg per Expense</span>
+                <span class="summary-icon icon-amber">📊</span>
+              </div>
+              <div class="summary-card-value" id="ct-stat-avg-amount">₹0.00</div>
+              <div class="summary-card-sub">Average transaction</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Active Members</span>
+                <span class="summary-icon icon-purple">👥</span>
+              </div>
+              <div class="summary-card-value" id="ct-stat-participants-count">0</div>
+              <div class="summary-card-sub">Splitting expenses</div>
+            </div>
+          </div>
+
+          <!-- Current Trip Transactions Card with Filter Toolbar -->
+          <div class="dashboard-section-card">
+            <div class="section-card-header">
+              <div>
+                <h2 class="section-title">All Trip Transactions</h2>
+                <p class="section-desc">Search, filter, edit, or delete trip expenses</p>
+              </div>
+              <div class="filter-controls-bar">
+                <input type="text" id="ct-filter-search" class="form-input input-search" placeholder="Search expenses..." aria-label="Search trip expenses" />
+                <select id="ct-filter-category" class="form-select" aria-label="Filter trip category"></select>
+                <select id="ct-filter-period" class="form-select" aria-label="Filter trip period">
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                  <option value="year">This Year</option>
+                </select>
+                <select id="ct-filter-payer" class="form-select" aria-label="Filter trip payer">
+                  <option value="all">All Payers</option>
+                </select>
+                <select id="ct-filter-sort" class="form-select" aria-label="Sort trip expenses">
+                  <option value="date-desc">Newest First</option>
+                  <option value="date-asc">Oldest First</option>
+                  <option value="amount-desc">Amount: High to Low</option>
+                  <option value="amount-asc">Amount: Low to High</option>
+                  <option value="category-asc">Category: A to Z</option>
+                  <option value="description-asc">Description: A to Z</option>
+                </select>
+                <button type="button" id="ct-filter-clear-btn" class="btn btn-ghost btn-sm" title="Clear trip filters">Reset</button>
+              </div>
+            </div>
+
+            <div id="ct-expense-table-container" class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Paid By</th>
+                    <th class="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="ct-expense-table-body"></tbody>
+              </table>
+              <div id="ct-table-empty-state" class="empty-state hidden">
+                <div class="empty-icon">🧾</div>
+                <h3>No Expenses Recorded Yet</h3>
+                <p>Click "Add Expense" above to record your first expense for this trip.</p>
+              </div>
+            </div>
+            <div id="ct-pagination-container" class="pagination-bar"></div>
+          </div>
+
+          <!-- Current Trip Balances -->
+          <div class="dashboard-section-card">
+            <div class="section-card-header">
+              <h2 class="section-title">Trip Settlement Status</h2>
+            </div>
+            <div id="ct-balances" class="balances-container"></div>
+          </div>
+        </section>
+
+        <!-- 3. VIEW: All Expenses (Global Across All Trips) -->
+        <section id="view-all-expenses" class="view-panel hidden">
+          <div class="view-header">
+            <div>
+              <h2 class="view-title">All Recorded Expenses (Global)</h2>
+              <p class="view-desc">Complete financial history across all trips and events</p>
+            </div>
+          </div>
+
+          <!-- All Expenses Summary Cards -->
+          <div class="summary-cards-grid">
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Lifetime Spending</span>
+                <span class="summary-icon icon-emerald">₹</span>
+              </div>
+              <div class="summary-card-value" id="all-stat-total-amount">₹0.00</div>
+              <div class="summary-card-sub">Across all trips</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Total Transactions</span>
+                <span class="summary-icon icon-blue">📋</span>
+              </div>
+              <div class="summary-card-value" id="all-stat-total-count">0</div>
+              <div class="summary-card-sub">Recorded items</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Global Average</span>
+                <span class="summary-icon icon-amber">📊</span>
+              </div>
+              <div class="summary-card-value" id="all-stat-avg-amount">₹0.00</div>
+              <div class="summary-card-sub">Per transaction</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-card-header">
+                <span class="summary-card-title">Total Members</span>
+                <span class="summary-icon icon-purple">👥</span>
+              </div>
+              <div class="summary-card-value" id="all-stat-participants-count">0</div>
+              <div class="summary-card-sub">Across all trips</div>
+            </div>
+          </div>
+
+          <!-- All Transactions Card with Filter Toolbar -->
+          <div class="dashboard-section-card">
+            <div class="section-card-header">
+              <div>
+                <h2 class="section-title">Global Transactions Log</h2>
+                <p class="section-desc">Search and analyze expenses across every recorded trip</p>
+              </div>
+              <div class="filter-controls-bar">
+                <input type="text" id="all-filter-search" class="form-input input-search" placeholder="Search all expenses..." aria-label="Search all expenses" />
+                <select id="all-filter-category" class="form-select" aria-label="Filter all category"></select>
+                <select id="all-filter-period" class="form-select" aria-label="Filter all period">
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="week">This Week</option>
+                  <option value="month">This Month</option>
+                  <option value="year">This Year</option>
+                </select>
+                <select id="all-filter-payer" class="form-select" aria-label="Filter all payer">
+                  <option value="all">All Payers</option>
+                </select>
+                <select id="all-filter-sort" class="form-select" aria-label="Sort all expenses">
+                  <option value="date-desc">Newest First</option>
+                  <option value="date-asc">Oldest First</option>
+                  <option value="amount-desc">Amount: High to Low</option>
+                  <option value="amount-asc">Amount: Low to High</option>
+                  <option value="category-asc">Category: A to Z</option>
+                  <option value="description-asc">Description: A to Z</option>
+                </select>
+                <button type="button" id="all-filter-clear-btn" class="btn btn-ghost btn-sm" title="Clear global filters">Reset</button>
+              </div>
+            </div>
+
+            <div id="all-expense-table-container" class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Paid By</th>
+                    <th class="text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="all-expense-table-body"></tbody>
+              </table>
+              <div id="all-table-empty-state" class="empty-state hidden">
+                <div class="empty-icon">🧾</div>
+                <h3>No Expenses Found</h3>
+                <p>No transactions found in your records.</p>
+              </div>
+            </div>
+            <div id="all-pagination-container" class="pagination-bar"></div>
+          </div>
+        </section>
+
+        <!-- 4. VIEW: Trip History -->
+        <section id="view-trip-history" class="view-panel hidden">
+          <div class="view-header">
+            <div>
+              <h2 class="view-title">Trip & Event History</h2>
+              <p class="view-desc">Browse, load, or delete previous trips and their full records</p>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="document.getElementById('header-new-trip-btn').click()">
+              <span>🆕 Create New Trip</span>
+            </button>
+          </div>
+          <div id="trip-history-grid" class="trip-history-grid"></div>
+        </section>
+
+        <!-- 5. VIEW: Analytics -->
+        <section id="view-analytics" class="view-panel hidden">
+          <div class="view-header">
+            <div>
+              <h2 class="view-title">Financial Analytics & Trends</h2>
+              <p class="view-desc">Visual breakdown of trip expenditures and member contributions</p>
+            </div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <h3 class="chart-card-title">Category Distribution</h3>
+              </div>
+              <div class="chart-container">
+                <canvas id="analyticsCategoryChart"></canvas>
+                <div id="analyticsCategoryChartEmpty" class="chart-empty-state">
+                  <div class="empty-icon">📊</div>
+                  <p>No category expenses to display</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-card-header">
+                <h3 class="chart-card-title">Daily Spending Timeline</h3>
+              </div>
+              <div class="chart-container">
+                <canvas id="analyticsTimelineChart"></canvas>
+                <div id="analyticsTimelineChartEmpty" class="chart-empty-state">
+                  <div class="empty-icon">📈</div>
+                  <p>No timeline data available</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-card chart-card-lg">
+              <div class="chart-card-header">
+                <h3 class="chart-card-title">Spending by Participant</h3>
+              </div>
+              <div class="chart-container chart-container-lg">
+                <canvas id="analyticsParticipantChart"></canvas>
+                <div id="analyticsParticipantChartEmpty" class="chart-empty-state">
+                  <div class="empty-icon">👥</div>
+                  <p>No participant spending data</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Breakdown Table -->
+          <div class="dashboard-section-card">
+            <div class="section-card-header">
+              <h3 class="section-title">Category Spending Breakdown</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Category</th>
+                    <th>Total Spent</th>
+                    <th>Share of Total</th>
+                    <th>Transactions</th>
+                  </tr>
+                </thead>
+                <tbody id="analytics-category-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. VIEW: Settlement -->
+        <section id="view-settlement" class="view-panel hidden">
+          <div class="view-header">
+            <div>
+              <h2 class="view-title">Settlement & Split Dashboard</h2>
+              <p class="view-desc">Clear breakdown of who owes money and recommended direct settlements</p>
+            </div>
+          </div>
+          <div class="dashboard-section-card">
+            <div id="settlement-balances-container" class="balances-container"></div>
+          </div>
+        </section>
+
+        <!-- 7. VIEW: Settings & Data Management -->
+        <section id="view-settings" class="view-panel hidden">
+          <div class="view-header">
+            <div>
+              <h2 class="view-title">Settings & Data Management</h2>
+              <p class="view-desc">Theme preferences, backup import/export, and data management</p>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <!-- Appearance Card -->
+            <div class="settings-card">
+              <h3 class="settings-card-title">Appearance</h3>
+              <p class="settings-card-desc">Choose between crisp Light mode or comfortable Dark mode.</p>
+              <button type="button" class="btn btn-secondary theme-toggle-btn">
+                <span class="theme-icon">🌓</span>
+                <span class="theme-label">Toggle Dark / Light Theme</span>
+              </button>
+            </div>
+
+            <!-- Currency & Region Card -->
+            <div class="settings-card">
+              <h3 class="settings-card-title">Currency & Regional Settings</h3>
+              <p class="settings-card-desc">Standardized for Indian Rupee (INR ₹) formatting with Lakhs and Crores numbering hierarchy.</p>
+              <div class="currency-preview-box">
+                <span class="currency-tag">₹ INR</span>
+                <span class="currency-sample">Sample: ₹1,25,000.00</span>
+              </div>
+            </div>
+
+            <!-- Data Backup & Export Card -->
+            <div class="settings-card">
+              <h3 class="settings-card-title">Export & Backup</h3>
+              <p class="settings-card-desc">Download all your trips, transactions, and participant balances into a JSON file.</p>
+              <button type="button" id="export-data-btn" class="btn btn-secondary">
+                <span>📥 Export Data (JSON)</span>
+              </button>
+            </div>
+
+            <!-- Data Import Card -->
+            <div class="settings-card">
+              <h3 class="settings-card-title">Import Data</h3>
+              <p class="settings-card-desc">Restore or merge previous trip records from a valid JSON backup file.</p>
+              <label class="btn btn-secondary file-upload-label">
+                <span>📤 Import Data (JSON)</span>
+                <input type="file" id="import-file-input" accept=".json" class="file-input-hidden" />
+              </label>
+            </div>
+
+            <!-- Reset Data Card -->
+            <div class="settings-card settings-card-danger">
+              <h3 class="settings-card-title text-danger">Reset All Data</h3>
+              <p class="settings-card-desc">Permanently erase all stored trips, expenses, and settings from this browser.</p>
+              <button type="button" id="reset-data-btn" class="btn btn-danger">
+                <span>⚠️ Erase All Data</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </main>
     </div>
   </div>
 
+  <!-- ADD / EDIT EXPENSE MODAL -->
+  <div id="expense-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="expense-modal-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="expense-modal-title">Add New Expense</h3>
+        <button type="button" id="expense-modal-close" class="modal-close" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <form id="expense-form" class="modal-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="expense-category" class="form-label">Category <span class="required">*</span></label>
+            <select id="expense-category" class="form-select" required></select>
+          </div>
+
+          <div class="form-group">
+            <label for="expense-date" class="form-label">Expense Date <span class="required">*</span></label>
+            <input type="date" id="expense-date" class="form-input" required />
+          </div>
+
+          <div class="form-group form-col-full">
+            <label for="expense-desc" class="form-label">Description <span class="required">*</span></label>
+            <input type="text" id="expense-desc" class="form-input" placeholder="e.g. Seafood Dinner at Fisherman's Wharf" required />
+          </div>
+
+          <div class="form-group">
+            <label for="expense-amount" class="form-label">Amount (₹ INR) <span class="required">*</span></label>
+            <div class="input-prefix-wrapper">
+              <span class="input-prefix">₹</span>
+              <input type="number" id="expense-amount" class="form-input input-with-prefix" placeholder="0.00" step="any" min="0.01" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="expense-payer" class="form-label">Paid By (Participant) <span class="required">*</span></label>
+            <input type="text" id="expense-payer" class="form-input" placeholder="e.g. Rahul, Priya, Self" required />
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="expense-modal-cancel" class="btn btn-secondary">Cancel</button>
+          <button type="submit" id="expense-submit-btn" class="btn btn-primary">Save Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- CREATE NEW TRIP MODAL -->
+  <div id="trip-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="trip-modal-title">
+    <div class="modal-dialog modal-dialog-sm">
+      <div class="modal-header">
+        <h3 id="trip-modal-title">Create New Trip / Event</h3>
+        <button type="button" id="trip-modal-close" class="modal-close" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <form id="trip-form" class="modal-form">
+        <div class="form-group">
+          <label for="trip-title-input" class="form-label">Trip Title <span class="required">*</span></label>
+          <input type="text" id="trip-title-input" class="form-input" placeholder="e.g. Manali Winter Trek, Team Outing" required />
+        </div>
+
+        <div class="form-group">
+          <label for="trip-date-input" class="form-label">Start Date <span class="required">*</span></label>
+          <input type="date" id="trip-date-input" class="form-input" required />
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" id="trip-modal-cancel" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Start Trip</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Hidden legacy elements for complete backward compatibility -->
+  <div class="sr-only" aria-hidden="true" style="display:none;">
+    <input type="text" id="tripTitle" />
+    <input type="date" id="tripDate" />
+    <button id="startTrip"></button>
+    <button id="newTrip"></button>
+    <button id="viewHistory"></button>
+    <input type="text" id="category" />
+    <input type="text" id="description" />
+    <input type="number" id="amount" />
+    <input type="text" id="paidBy" />
+    <div id="history-section"></div>
+    <ul id="trip-history-list"></ul>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <!-- ES Module Script -->
   <script type="module" src="scripts/main.js"></script>
 </body>
 </html>
