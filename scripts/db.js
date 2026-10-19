@@ -65,61 +65,19 @@ function initDB() {
       }
     }
 
-    // If no trips exist at all, create an initial sample/starter trip for great first-run UX
-    if (Object.keys(trips).length === 0) {
-      const today = new Date().toISOString().split('T')[0];
-      const initialTripTitle = 'Goa Vacation';
-      trips[initialTripTitle] = [
-        {
-          id: 1700000001,
-          tripTitle: initialTripTitle,
-          date: today,
-          category: 'Travel',
-          description: 'Flight tickets & taxi to resort',
-          amount: 14500,
-          paidBy: 'Aarav'
-        },
-        {
-          id: 1700000002,
-          tripTitle: initialTripTitle,
-          date: today,
-          category: 'Accommodation',
-          description: 'Beachside Villa booking (3 nights)',
-          amount: 28000,
-          paidBy: 'Priya'
-        },
-        {
-          id: 1700000003,
-          tripTitle: initialTripTitle,
-          date: today,
-          category: 'Food',
-          description: 'Seafood dinner at Fisherman\'s Wharf',
-          amount: 6200,
-          paidBy: 'Rohan'
-        },
-        {
-          id: 1700000004,
-          tripTitle: initialTripTitle,
-          date: today,
-          category: 'Entertainment',
-          description: 'Scuba diving & water sports package',
-          amount: 9800,
-          paidBy: 'Aarav'
-        },
-        {
-          id: 1700000005,
-          tripTitle: initialTripTitle,
-          date: today,
-          category: 'Transport',
-          description: 'Self-drive scooter & car rentals',
-          amount: 3500,
-          paidBy: 'Priya'
-        }
-      ];
-      localStorage.setItem(STORAGE_KEYS.ALL_TRIPS, JSON.stringify(trips));
-      
-      // Set active trip
-      setActiveTrip(initialTripTitle, today);
+    // If the demo "Goa Vacation" was previously seeded, remove it so only real user data is used
+    if (trips['Goa Vacation'] && Array.isArray(trips['Goa Vacation'])) {
+      const isDemo = trips['Goa Vacation'].some(e => e.id === 1700000001);
+      if (isDemo) {
+        delete trips['Goa Vacation'];
+        localStorage.setItem(STORAGE_KEYS.ALL_TRIPS, JSON.stringify(trips));
+        try {
+          const activeRaw = localStorage.getItem(STORAGE_KEYS.CURRENT_TRIP);
+          if (activeRaw && JSON.parse(activeRaw).title === 'Goa Vacation') {
+            localStorage.removeItem(STORAGE_KEYS.CURRENT_TRIP);
+          }
+        } catch (e) {}
+      }
     }
   } catch (e) {
     console.error('Storage access error during initDB', e);
@@ -303,15 +261,18 @@ export function deleteTrip(title) {
  * @returns {{ title: string, date: string }}
  */
 export function getActiveTrip() {
+  const trips = getAllTrips();
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.CURRENT_TRIP);
     if (raw) {
-      return JSON.parse(raw);
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.title && trips[parsed.title]) {
+        return parsed;
+      }
     }
   } catch (e) {}
 
   // Fallback to first trip if any
-  const trips = getAllTrips();
   const titles = Object.keys(trips);
   if (titles.length > 0) {
     const title = titles[0];

@@ -300,30 +300,41 @@ function updateHeaderInfo() {
   const dateEl = document.getElementById('header-trip-date');
   const badgeEl = document.getElementById('header-trip-badge');
   const tripSelector = document.getElementById('header-trip-select');
+  const metaSepEl = document.getElementById('header-meta-sep');
 
-  const hasTrip = Boolean(state.activeTrip.title);
+  const allTrips = db.getAllTrips();
+  const titles = Object.keys(allTrips);
+  const hasTrip = Boolean(state.activeTrip.title && allTrips[state.activeTrip.title]);
+
   if (titleEl) {
-    titleEl.textContent = hasTrip ? state.activeTrip.title : 'No Trip Selected';
+    titleEl.textContent = hasTrip ? state.activeTrip.title : 'No Active Trip';
   }
   if (dateEl) {
-    dateEl.textContent = hasTrip ? `Started: ${formatDate(state.activeTrip.date)}` : 'Create or select a trip';
+    dateEl.textContent = hasTrip ? `Started: ${formatDate(state.activeTrip.date)}` : 'Create or select a trip to get started';
   }
   if (badgeEl) {
     badgeEl.style.display = hasTrip ? 'inline-flex' : 'none';
   }
+  if (metaSepEl) {
+    metaSepEl.style.display = hasTrip && titles.length > 1 ? 'inline' : 'none';
+  }
 
   // Populate header quick trip switcher
   if (tripSelector) {
-    const allTrips = db.getAllTrips();
-    const titles = Object.keys(allTrips);
-    tripSelector.innerHTML = '';
-    titles.forEach(t => {
-      const opt = document.createElement('option');
-      opt.value = t;
-      opt.textContent = t;
-      if (t === state.activeTrip.title) opt.selected = true;
-      tripSelector.appendChild(opt);
-    });
+    if (hasTrip && titles.length > 1) {
+      tripSelector.style.display = 'inline-block';
+      tripSelector.innerHTML = '';
+      titles.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = t;
+        if (t === state.activeTrip.title) opt.selected = true;
+        tripSelector.appendChild(opt);
+      });
+    } else {
+      tripSelector.style.display = 'none';
+      tripSelector.innerHTML = '';
+    }
   }
 }
 
