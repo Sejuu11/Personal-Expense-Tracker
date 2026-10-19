@@ -65,20 +65,17 @@ function initDB() {
       }
     }
 
-    // If the demo "Goa Vacation" was previously seeded, remove it so only real user data is used
-    if (trips['Goa Vacation'] && Array.isArray(trips['Goa Vacation'])) {
-      const isDemo = trips['Goa Vacation'].some(e => e.id === 1700000001);
-      if (isDemo) {
-        delete trips['Goa Vacation'];
-        localStorage.setItem(STORAGE_KEYS.ALL_TRIPS, JSON.stringify(trips));
-        try {
-          const activeRaw = localStorage.getItem(STORAGE_KEYS.CURRENT_TRIP);
-          if (activeRaw && JSON.parse(activeRaw).title === 'Goa Vacation') {
-            localStorage.removeItem(STORAGE_KEYS.CURRENT_TRIP);
-          }
-        } catch (e) {}
-      }
+    // Unconditionally purge any leftover demo "Goa Vacation" data from localStorage
+    if (trips['Goa Vacation']) {
+      delete trips['Goa Vacation'];
+      localStorage.setItem(STORAGE_KEYS.ALL_TRIPS, JSON.stringify(trips));
     }
+    try {
+      const activeRaw = localStorage.getItem(STORAGE_KEYS.CURRENT_TRIP);
+      if (activeRaw && JSON.parse(activeRaw).title === 'Goa Vacation') {
+        localStorage.removeItem(STORAGE_KEYS.CURRENT_TRIP);
+      }
+    } catch (e) {}
   } catch (e) {
     console.error('Storage access error during initDB', e);
   }

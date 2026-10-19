@@ -35,9 +35,13 @@ function initApp() {
   updateThemeToggleUI();
 
   // 2. Initialize Active Trip
-  const savedActive = db.getActiveTrip();
   const trips = db.getAllTrips();
+  if (trips['Goa Vacation']) {
+    delete trips['Goa Vacation'];
+    db.saveAllTrips(trips);
+  }
   const titles = Object.keys(trips);
+  const savedActive = db.getActiveTrip();
 
   if (savedActive.title && trips[savedActive.title]) {
     state.activeTrip = savedActive;
@@ -48,6 +52,7 @@ function initApp() {
     db.setActiveTrip(state.activeTrip.title, state.activeTrip.date);
   } else {
     state.activeTrip = { title: '', date: '' };
+    db.setActiveTrip('', '');
   }
 
   // 3. Setup Dropdowns
